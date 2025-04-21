@@ -185,13 +185,14 @@ namespace YARG.Core.Song
             }
         }
 
-        private static readonly unsafe delegate*<SongCache, void>[] SORTERS =
-        {
-            &SortByTitle,    &SortByArtist, &SortByAlbum,       &SortByGenre,  &SortByYear,      &SortByCharter,
-            &SortByPlaylist, &SortBySource, &SortByArtistAlbum, &SortByLength, &SortByDateAdded, &SortByInstruments
+        private static readonly Action<SongCache>[] SORTERS = {
+            SortByTitle, SortByArtist, SortByAlbum, SortByGenre, SortByYear,
+            SortByCharter, SortByPlaylist, SortBySource, SortByArtistAlbum,
+            SortByLength, SortByDateAdded, SortByInstruments
         };
 
-        internal static unsafe void SortEntries(SongCache cache)
+
+        internal static void SortEntries(SongCache cache)
         {
             Parallel.For(0, SORTERS.Length, i => SORTERS[i](cache));
         }
@@ -450,10 +451,10 @@ namespace YARG.Core.Song
             });
         }
 
-        private static readonly unsafe delegate*<SongCache, Dictionary<SongEntry, CacheWriteIndices>, List<string>>[] COLLECTORS =
+        private static readonly Func<SongCache, Dictionary<SongEntry, CacheWriteIndices>, List<string>>[] COLLECTORS =
         {
-            &CollectCacheTitles, &CollectCacheArtists,  &CollectCacheAlbums,    &CollectCacheGenres,
-            &CollectCacheYears,  &CollectCacheCharters, &CollectCachePlaylists, &CollectCacheSources,
+            CollectCacheTitles, CollectCacheArtists,  CollectCacheAlbums,    CollectCacheGenres,
+            CollectCacheYears,  CollectCacheCharters, CollectCachePlaylists, CollectCacheSources,
         };
 
         internal static void WriteCategoriesToCache(FileStream filestream, SongCache cache, Dictionary<SongEntry, CacheWriteIndices> nodes)
@@ -469,10 +470,7 @@ namespace YARG.Core.Song
             var categories = new List<string>[CacheReadStrings.NUM_CATEGORIES];
             Parallel.For(0, CacheReadStrings.NUM_CATEGORIES, i =>
             {
-                unsafe
-                {
-                    categories[i] = COLLECTORS[i](cache, nodes);
-                }
+                categories[i] = COLLECTORS[i](cache, nodes);
             });
 
             using MemoryStream ms = new();
